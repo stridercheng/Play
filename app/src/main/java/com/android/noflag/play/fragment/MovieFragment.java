@@ -4,10 +4,13 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
+import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.Toast;
 
@@ -39,11 +42,11 @@ import butterknife.InjectView;
  * Use the {@link MovieFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class MovieFragment extends Fragment {
+public class MovieFragment extends Fragment implements MovieAdapter.MovieAdapterItemClick {
     private final static String TAG = MovieFragment.class.getSimpleName();
     private MovieAdapter adapter;
     @InjectView(R.id.movielist)
-    ListView mList;
+    RecyclerView mList;
     @InjectView(R.id.refresh)
     SwipeRefreshLayout refreshLayout;
     /**
@@ -96,12 +99,15 @@ public class MovieFragment extends Fragment {
                 new GetMovieAsynch().execute();
             }
         });
-        mList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 
-            }
-        });
+        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getActivity());
+        mList.setHasFixedSize(true);
+        mList.setLayoutManager(linearLayoutManager);
+    }
+
+    @Override
+    public void onMovieItemClick(View v, Movie movie) {
+        Toast.makeText(getActivity(), "name" + movie.getMovie_name(), Toast.LENGTH_SHORT).show();
     }
 
     class GetMovieAsynch extends AsyncTask<Void, Void, String> {
@@ -136,9 +142,14 @@ public class MovieFragment extends Fragment {
                 Gson gson = new Gson();
                 movieList = gson.fromJson(movies.toString(), new TypeToken<List<Movie>>() {
                 }.getType());
-                adapter = null;
-                adapter = new MovieAdapter(getActivity(), movieList);
-                mList.setAdapter(adapter);
+                if (adapter != null) {
+                    adapter.setMovieList(movieList);
+                    adapter.notifyDataSetChanged();
+                } else {
+                    adapter = new MovieAdapter(getActivity(), movieList);
+                    adapter.setMovieAdapterItemClick(MovieFragment.this);
+                    mList.setAdapter(adapter);
+                }
             } catch (JSONException e) {
                 Toast.makeText(getActivity(), "请求数据出错", Toast.LENGTH_SHORT).show();
                 e.printStackTrace();
