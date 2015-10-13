@@ -7,7 +7,7 @@ import android.support.v4.app.FragmentPagerAdapter;
 import java.util.List;
 
 /**
- * deiscription:
+ * description:
  * User: stridercheng
  * Date: 2015-10-05
  * Time: 19:50

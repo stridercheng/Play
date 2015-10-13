@@ -16,7 +16,7 @@ import com.nostra13.universalimageloader.utils.StorageUtils;
 import java.io.File;
 
 /**
- * deiscription:
+ * description:
  * User: stridercheng
  * Date: 2015-10-06
  * Time: 13:19
