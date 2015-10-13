@@ -54,6 +54,7 @@ public class MainActivity extends AppCompatActivity {
 
         MainViewPagerAdapter adapter = new MainViewPagerAdapter(getSupportFragmentManager(), fragmentList);
         pagers.setAdapter(adapter);
+        pagers.setOffscreenPageLimit(3);
         tabLayout.setupWithViewPager(pagers);
 
         pagers.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {

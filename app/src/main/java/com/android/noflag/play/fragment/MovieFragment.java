@@ -86,6 +86,7 @@ public class MovieFragment extends Fragment implements MovieAdapter.MovieAdapter
     @Override
     public void onResume() {
         super.onResume();
+        refreshLayout.setRefreshing(true);
         new GetMovieAsynch().execute();
     }
 
