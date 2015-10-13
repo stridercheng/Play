@@ -46,7 +46,7 @@ public class MainActivity extends AppCompatActivity {
     private void initData() {
         fragmentList = new ArrayList<>();
         MovieFragment movieFragment = MovieFragment.newInstance();
-        SceneFragment sceneFragment = SceneFragment.newInstance("", "");
+        SceneFragment sceneFragment = SceneFragment.newInstance();
         TravelNoteFragment travelNoteFragment = TravelNoteFragment.newInstance("", "");
         fragmentList.add(movieFragment);
         fragmentList.add(sceneFragment);

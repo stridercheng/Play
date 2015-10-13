@@ -1,14 +1,28 @@
 package com.android.noflag.play.fragment;
 
 import android.app.Activity;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.Paint;
+import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import android.os.Bundle;
+import android.renderscript.Allocation;
+import android.renderscript.RenderScript;
+import android.renderscript.ScriptIntrinsicBlur;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewTreeObserver;
+import android.widget.ImageView;
+import android.widget.TextView;
 
 import com.android.noflag.play.R;
+import com.android.noflag.play.utils.FastBlur;
+
+import butterknife.ButterKnife;
+import butterknife.InjectView;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -19,32 +33,20 @@ import com.android.noflag.play.R;
  * create an instance of this fragment.
  */
 public class SceneFragment extends Fragment {
-    // TODO: Rename parameter arguments, choose names that match
-    // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-    private static final String ARG_PARAM1 = "param1";
-    private static final String ARG_PARAM2 = "param2";
-
-    // TODO: Rename and change types of parameters
-    private String mParam1;
-    private String mParam2;
-
+    @InjectView(R.id.content)
+    ImageView imageView;
+    @InjectView(R.id.time)
+    TextView textView;
     private OnFragmentInteractionListener mListener;
 
     /**
      * Use this factory method to create a new instance of
      * this fragment using the provided parameters.
      *
-     * @param param1 Parameter 1.
-     * @param param2 Parameter 2.
      * @return A new instance of fragment SceneFragment.
      */
-    // TODO: Rename and change types and number of parameters
-    public static SceneFragment newInstance(String param1, String param2) {
+    public static SceneFragment newInstance() {
         SceneFragment fragment = new SceneFragment();
-        Bundle args = new Bundle();
-        args.putString(ARG_PARAM1, param1);
-        args.putString(ARG_PARAM2, param2);
-        fragment.setArguments(args);
         return fragment;
     }
 
@@ -56,8 +58,7 @@ public class SceneFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
-            mParam1 = getArguments().getString(ARG_PARAM1);
-            mParam2 = getArguments().getString(ARG_PARAM2);
+
         }
     }
 
@@ -65,10 +66,47 @@ public class SceneFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_scene, container, false);
+        View view = inflater.inflate(R.layout.fragment_scene, container, false);
+        ButterKnife.inject(this, view);
+
+        applyBlur();
+        return view;
     }
 
-    // TODO: Rename method, update argument and hook method into UI event
+    private void applyBlur() {
+        imageView.getViewTreeObserver().addOnPreDrawListener(new ViewTreeObserver.OnPreDrawListener() {
+            @Override
+            public boolean onPreDraw() {
+                imageView.getViewTreeObserver().removeOnPreDrawListener(this);
+                imageView.buildDrawingCache();
+
+                Bitmap bm = imageView.getDrawingCache();
+                blur(bm, imageView);
+                return true;
+            }
+        });
+    }
+
+    private void blur(Bitmap bm, View view) {
+        long startMs = System.currentTimeMillis();
+        float scaleFactor = 1;
+        float radius = 20;
+        Bitmap overlay = Bitmap.createBitmap((int) (view.getMeasuredWidth() / scaleFactor),
+                (int) (view.getMeasuredHeight() / scaleFactor), Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(overlay);
+        canvas.translate(-view.getLeft() / scaleFactor, -view.getTop() / scaleFactor);
+        canvas.scale(1 / scaleFactor, 1 / scaleFactor);
+        Paint paint = new Paint();
+        paint.setFlags(Paint.FILTER_BITMAP_FLAG);
+        canvas.drawBitmap(bm, 0, 0, paint);
+
+        overlay = FastBlur.doBlur(overlay, (int) radius, true);
+        view.setBackground(new BitmapDrawable(getResources(), overlay));
+
+        textView.setText(System.currentTimeMillis() - startMs + "ms");
+    }
+
+
     public void onButtonPressed(Uri uri) {
         if (mListener != null) {
             mListener.onFragmentInteraction(uri);
@@ -97,7 +135,6 @@ public class SceneFragment extends Fragment {
      * >Communicating with Other Fragments</a> for more information.
      */
     public interface OnFragmentInteractionListener {
-        // TODO: Update argument type and name
         public void onFragmentInteraction(Uri uri);
     }
 
