@@ -3,6 +3,8 @@
     package="com.android.noflag.play" >
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
@@ -19,8 +21,10 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".activity.SearchActivity"
-            android:label="@string/title_activity_search" >
+            android:name=".activity.SearchActivity" >
+        </activity>
+        <activity
+            android:name=".activity.MovieActivity">
         </activity>
     </application>
 

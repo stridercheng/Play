@@ -6,20 +6,41 @@ import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.renderscript.Allocation;
 import android.renderscript.RenderScript;
 import android.renderscript.ScriptIntrinsicBlur;
 import android.support.v4.app.Fragment;
+import android.support.v4.widget.SwipeRefreshLayout;
+import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import com.android.noflag.play.MyApplication;
 import com.android.noflag.play.R;
+import com.android.noflag.play.adapter.MovieAdapter;
+import com.android.noflag.play.adapter.SceneAdapter;
+import com.android.noflag.play.entity.Movie;
+import com.android.noflag.play.entity.Scene;
 import com.android.noflag.play.utils.FastBlur;
+import com.android.noflag.play.utils.OkHttpClientManager;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+import com.squareup.okhttp.Request;
+import com.squareup.okhttp.Response;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.IOException;
+import java.util.List;
 
 import butterknife.ButterKnife;
 import butterknife.InjectView;
@@ -33,10 +54,11 @@ import butterknife.InjectView;
  * create an instance of this fragment.
  */
 public class SceneFragment extends Fragment {
-    @InjectView(R.id.content)
-    ImageView imageView;
-    @InjectView(R.id.time)
-    TextView textView;
+    SceneAdapter adapter;
+    @InjectView(R.id.scenelist)
+    RecyclerView sceneList;
+    @InjectView(R.id.refresh)
+    SwipeRefreshLayout refreshLayout;
     private OnFragmentInteractionListener mListener;
 
     /**
@@ -69,48 +91,20 @@ public class SceneFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_scene, container, false);
         ButterKnife.inject(this, view);
 
-        applyBlur();
+//        applyBlur();
         return view;
     }
-
-    private void applyBlur() {
-        imageView.getViewTreeObserver().addOnPreDrawListener(new ViewTreeObserver.OnPreDrawListener() {
-            @Override
-            public boolean onPreDraw() {
-                imageView.getViewTreeObserver().removeOnPreDrawListener(this);
-                imageView.buildDrawingCache();
-
-                Bitmap bm = imageView.getDrawingCache();
-                blur(bm, imageView);
-                return true;
-            }
-        });
-    }
-
-    private void blur(Bitmap bm, View view) {
-        long startMs = System.currentTimeMillis();
-        float scaleFactor = 1;
-        float radius = 20;
-        Bitmap overlay = Bitmap.createBitmap((int) (view.getMeasuredWidth() / scaleFactor),
-                (int) (view.getMeasuredHeight() / scaleFactor), Bitmap.Config.ARGB_8888);
-        Canvas canvas = new Canvas(overlay);
-        canvas.translate(-view.getLeft() / scaleFactor, -view.getTop() / scaleFactor);
-        canvas.scale(1 / scaleFactor, 1 / scaleFactor);
-        Paint paint = new Paint();
-        paint.setFlags(Paint.FILTER_BITMAP_FLAG);
-        canvas.drawBitmap(bm, 0, 0, paint);
-
-        overlay = FastBlur.doBlur(overlay, (int) radius, true);
-        view.setBackground(new BitmapDrawable(getResources(), overlay));
-
-        textView.setText(System.currentTimeMillis() - startMs + "ms");
-    }
-
 
     public void onButtonPressed(Uri uri) {
         if (mListener != null) {
             mListener.onFragmentInteraction(uri);
         }
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        refreshLayout.setRefreshing(true);
     }
 
     @Override
@@ -122,6 +116,51 @@ public class SceneFragment extends Fragment {
     public void onDetach() {
         super.onDetach();
         mListener = null;
+    }
+
+    class GetSceneAsynch extends AsyncTask<Void, Void, String> {
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+        }
+
+        @Override
+        protected String doInBackground(Void... params) {
+            String result = "";
+            OkHttpClientManager okHttpClientManager = OkHttpClientManager.getInstance();
+            String url = MyApplication.movieUrl + "?wd=" + "新世纪电影城" + "&location=" + "济南" + "&rn=" + "15" + "&output=json&coord_type=bd09ll&out_coord_type=bd09ll";
+
+            Request request = new Request.Builder().url(url).get().header("apikey", MyApplication.movieKey).build();
+            try {
+                Response response = okHttpClientManager.getGetDelegate().get(request);
+                result = response.body().string();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return result;
+        }
+
+        @Override
+        protected void onPostExecute(String jsonArray) {
+            List<Scene> sceneList;
+            try {
+                JSONObject cinema = new JSONObject(jsonArray);
+                JSONArray movies = ((JSONObject) cinema.getJSONArray("result").get(0)).getJSONArray("movies");
+                Gson gson = new Gson();
+                sceneList = gson.fromJson(movies.toString(), new TypeToken<List<Movie>>() {
+                }.getType());
+
+                adapter = new SceneAdapter(getActivity(), sceneList);
+                SceneFragment.this.sceneList.setAdapter(adapter);
+//                saveMovieToDB(sceneList);
+            } catch (JSONException e) {
+                Toast.makeText(getActivity(), "请求数据出错", Toast.LENGTH_SHORT).show();
+                e.printStackTrace();
+            }
+            refreshLayout.setRefreshing(false);
+            super.onPostExecute(jsonArray);
+        }
     }
 
     /**

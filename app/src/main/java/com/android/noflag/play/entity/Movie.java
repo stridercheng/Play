@@ -1,7 +1,11 @@
 package com.android.noflag.play.entity;
 
+import android.os.Parcel;
+import android.os.Parcelable;
+
 import org.json.JSONObject;
 
+import java.io.Serializable;
 import java.util.List;
 
 /**
@@ -11,16 +15,16 @@ import java.util.List;
  * Time: 14:29
  * FIXME
  */
-public class Movie {
+public class Movie implements Serializable {
     private String movie_name, movie_director, movie_nation, movie_starring, movie_release_date, movie_description, movie_tags, movie_message, movie_type;
     private String movie_picture;
-    private double movie_length, movie_score;
+    private float movie_length, movie_score;
     private List<JSONObject> time_table;
 
     public Movie(String movie_name, String movie_director, String movie_nation, String movie_starring,
                  String movie_release_date, String movie_description, String movie_tags,
-                 String movie_message, String movie_type, String movie_picture, double movie_length,
-                 double movie_score, List<JSONObject> time_table) {
+                 String movie_message, String movie_type, String movie_picture, float movie_length,
+                 float movie_score, List<JSONObject> time_table) {
         this.movie_name = movie_name;
         this.movie_director = movie_director;
         this.movie_nation = movie_nation;
@@ -116,19 +120,19 @@ public class Movie {
         this.movie_picture = movie_picture;
     }
 
-    public double getMovie_length() {
+    public float getMovie_length() {
         return movie_length;
     }
 
-    public void setMovie_length(double movie_length) {
+    public void setMovie_length(float movie_length) {
         this.movie_length = movie_length;
     }
 
-    public double getMovie_score() {
+    public float getMovie_score() {
         return movie_score;
     }
 
-    public void setMovie_score(double movie_score) {
+    public void setMovie_score(float movie_score) {
         this.movie_score = movie_score;
     }
 

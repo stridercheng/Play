@@ -2,6 +2,7 @@ package com.android.noflag.play;
 
 import android.app.Application;
 import android.graphics.Bitmap;
+import android.os.Environment;
 
 import com.nostra13.universalimageloader.cache.disc.impl.UnlimitedDiscCache;
 import com.nostra13.universalimageloader.cache.disc.naming.Md5FileNameGenerator;
@@ -23,9 +24,12 @@ import java.io.File;
  * FIXME
  */
 public class MyApplication extends Application {
+    public final static String appPath = Environment.getExternalStorageDirectory().getPath() + "/";
     public final static boolean debugMode = true;
     public final static String movieUrl = "http://apis.baidu.com/apistore/movie/cinema";
+    public final static String sceneUrl = "http://apis.baidu.com/qunartravel/travellist/travellist";
     public final static String movieKey = "8a281740ed78c7868e1634e703ae7d5b";
+    public final static String sceneKey = "8a281740ed78c7868e1634e703ae7d5b";
 
     @Override
     public void onCreate() {

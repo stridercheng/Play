@@ -1,5 +1,6 @@
 package com.android.noflag.play.fragment;
 
+import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -13,7 +14,9 @@ import android.widget.Toast;
 
 import com.android.noflag.play.MyApplication;
 import com.android.noflag.play.R;
+import com.android.noflag.play.activity.MovieActivity;
 import com.android.noflag.play.adapter.MovieAdapter;
+import com.android.noflag.play.db.DBManager;
 import com.android.noflag.play.entity.Movie;
 import com.android.noflag.play.utils.OkHttpClientManager;
 import com.google.gson.Gson;
@@ -105,7 +108,10 @@ public class MovieFragment extends Fragment implements MovieAdapter.MovieAdapter
 
     @Override
     public void onMovieItemClick(View v, Movie movie) {
-        Toast.makeText(getActivity(), "name" + movie.getMovie_name(), Toast.LENGTH_SHORT).show();
+        Intent intent = new Intent();
+        intent.setClass(getActivity(), MovieActivity.class);
+        intent.putExtra("name", movie.getMovie_name());
+        startActivity(intent);
     }
 
     class GetMovieAsynch extends AsyncTask<Void, Void, String> {
@@ -148,6 +154,7 @@ public class MovieFragment extends Fragment implements MovieAdapter.MovieAdapter
                     adapter.setMovieAdapterItemClick(MovieFragment.this);
                     mList.setAdapter(adapter);
                 }
+                saveMovieToDB(movieList);
             } catch (JSONException e) {
                 Toast.makeText(getActivity(), "请求数据出错", Toast.LENGTH_SHORT).show();
                 e.printStackTrace();
@@ -155,5 +162,18 @@ public class MovieFragment extends Fragment implements MovieAdapter.MovieAdapter
             refreshLayout.setRefreshing(false);
             super.onPostExecute(jsonArray);
         }
+    }
+
+    private void saveMovieToDB(final List<Movie> movieList) {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                DBManager dbManager = new DBManager(getActivity());
+                for (int i = 0; i < movieList.size(); i++) {
+                    Movie movie = movieList.get(i);
+                    dbManager.saveMovie(movie);
+                }
+            }
+        }).start();
     }
 }
